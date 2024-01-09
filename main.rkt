@@ -33,6 +33,8 @@
              (define old-contents (port->bytes in))
              (unless (equal? new-contents old-contents)
                (log-info "Page at ~s updated... updating file" url)
+               (post notify-path
+                     #:data (format "~a was updated!" title))
                (call-with-output-file filename
                  #:exists 'replace
                  (lambda (out)

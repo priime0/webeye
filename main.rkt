@@ -32,7 +32,7 @@
              (define new-contents (get-output-bytes contents-port))
              (define old-contents (port->bytes in))
              (unless (equal? new-contents old-contents)
-               (log-info "Page at ~s updated... updating file" url)
+               (log-debug "Page at ~s updated... updating file" url)
                (post notify-path
                      #:data (format "~a was updated!" title))
                (call-with-output-file filename
@@ -41,12 +41,12 @@
                    (write-bytes new-contents out)
                    (void))))))]
         [else
-         (log-info "File ~s does not exist... pulling and creating" filename)
+         (log-debug "File ~s does not exist... pulling and creating" filename)
          (call-with-output-file filename
            (curry pull-update url))]))
 
 (define (pull-update url out)
-  (log-info "Retrieving page at url: ~s" url)
+  (log-debug "Retrieving page at url: ~s" url)
   (define res (get url))
   (unless (= 200 (response-status-code res))
     (log-error "Non-OK response status code at url: ~s" url))

@@ -36,3 +36,4 @@ This is currently an early-stage project. I plan to add several necessary featur
 + /Configuration/. Currently, I intend to write a Racket ~#lang~ and ~raco~ command for configuration.
   + /Configuration for pages/. Right now, you need to hardcode it into the ~main.rkt~ file.
   + /Configuration for delay/. Currently hardcoded at 30 seconds.
++ /Documentation/. Use Scribble documentation as the source-of-truth.

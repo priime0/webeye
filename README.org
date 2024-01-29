@@ -32,6 +32,7 @@ This is currently an early-stage project. I plan to add several necessary featur
 
 + /An interface for notifications/. Currently, I've hardcoded it to work with the [[https://ntfy.sh][ntfy.sh]] API for my current use cases. I plan on abstracting this out into an interface to allow for different notification services to be used.
 + /Better logging messages/. Logged messages currently don't show time or level, which would be useful.
-+ /Notifications on errors/. It would be convenient to receive notifications when errors occur.
-+ /Configuration for pages/. Right now, you need to hardcode it into the ~main.rkt~ file.
-+ /Configuration for delay/. Currently hardcoded at 30 seconds.
++ /Notifications on errors/. It would be convenient to receive notifications when errors occur. *Done!*
++ /Configuration/. Currently, I intend to write a Racket ~#lang~ and ~raco~ command for configuration.
+  + /Configuration for pages/. Right now, you need to hardcode it into the ~main.rkt~ file.
+  + /Configuration for delay/. Currently hardcoded at 30 seconds.

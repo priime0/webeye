@@ -13,6 +13,20 @@
     run
     'debug))
 
+(define (notify+log url message #:level [level 'debug])
+  (define priority (level->priority level))
+  (post url #:data message #:headers (hasheq 'Priority (number->string priority)))
+  (log-message (current-logger) level message))
+
+(define (level->priority level)
+  (match level
+    ['debug   1]
+    ['info    2]
+    ['warning 3]
+    ['error   4]
+    ['fatal   5]
+    ['none    1]))
+
 (define (run)
   (define delay-secs 30)
   (let loop ()
@@ -23,35 +37,43 @@
 
 (define (check-update pg)
   (match-define [page title url notify-path] pg)
-  (define filename (format "~a.html" title))
-  (cond [(file-exists? filename)
-         (call-with-input-file filename
-           (lambda (in)
-             (define contents-port (open-output-string))
-             (pull-update url contents-port)
-             (define new-contents (get-output-bytes contents-port))
-             (define old-contents (port->bytes in))
-             (unless (equal? new-contents old-contents)
-               (log-debug "Page at ~s updated... updating file" url)
-               (post notify-path
-                     #:data (format "~a was updated!" title))
-               (call-with-output-file filename
-                 #:exists 'replace
-                 (lambda (out)
-                   (write-bytes new-contents out)
-                   (void))))))]
-        [else
-         (log-debug "File ~s does not exist... pulling and creating" filename)
-         (call-with-output-file filename
-           (curry pull-update url))]))
+  (with-handlers ([exn?
+                   (lambda (e)
+                     (notify+log notify-path (exn-message e) #:level 'error))])
+    (define filename (format "~a.html" title))
+    (cond [(file-exists? filename)
+           (call-with-input-file filename
+             (lambda (in)
+               (define contents-port (open-output-string))
+               (pull-update pg contents-port)
+               (define new-contents (get-output-bytes contents-port))
+               (define old-contents (port->bytes in))
+               (unless (equal? new-contents old-contents)
+                 (log-debug "Page at ~s updated... updating file" url)
+                 (post notify-path
+                       #:data (format "~a was updated!" title))
+                 (call-with-output-file filename
+                   #:exists 'replace
+                   (lambda (out)
+                     (write-bytes new-contents out)
+                     (void))))))]
+          [else
+           (log-debug "File ~s does not exist... pulling and creating" filename)
+           (call-with-output-file filename
+             (curry pull-update url))])))
 
-(define (pull-update url out)
+(define (pull-update pg out)
+  (match-define [page title url notify-path] pg)
   (log-debug "Retrieving page at url: ~s" url)
   (define res (get url))
-  (unless (= 200 (response-status-code res))
-    (log-error "Non-OK response status code at url: ~s" url))
-  (define html (response-body (get url)))
-  (write-bytes html out)
+  (cond [(= 200 (response-status-code res))
+         (define html (response-body (get url)))
+         (write-bytes html out)]
+        [else
+         (define message (format "Non-OK (~s) response status code at url: ~s"
+                                 (response-status-code res)
+                                 url))
+         (notify+log notify-path message #:level 'error)])
   (void))
 
 (module+ main

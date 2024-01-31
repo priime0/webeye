@@ -15,7 +15,8 @@
 
 (define (notify+log url message #:level [level 'debug])
   (define priority (level->priority level))
-  (post url #:data message #:headers (hasheq 'Priority (number->string priority)))
+  (define headers (hasheq 'Priority (number->string priority)))
+  (post url #:data message #:headers headers)
   (log-message (current-logger) level message))
 
 (define (level->priority level)

@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/logging)
+(require racket/sandbox)
 (require net/http-easy)
 
 (struct page (title url notify-path) #:transparent)
@@ -66,15 +67,16 @@
 (define (pull-update pg out)
   (match-define [page _title url notify-path] pg)
   (log-debug "Retrieving page at url: ~s" url)
-  (define res (get url))
-  (cond [(= 200 (response-status-code res))
-         (define html (response-body (get url)))
-         (write-bytes html out)]
-        [else
-         (define message (format "Non-OK (~s) response status code at url: ~s"
-                                 (response-status-code res)
-                                 url))
-         (notify+log notify-path message #:level 'error)])
+  (with-limits 5 #f
+    (define res (get url))
+    (cond [(= 200 (response-status-code res))
+           (define html (response-body (get url)))
+           (write-bytes html out)]
+          [else
+           (define message (format "Non-OK (~s) response status code at url: ~s"
+                                   (response-status-code res)
+                                   url))
+           (notify+log notify-path message #:level 'error)]))
   (void))
 
 (module+ main

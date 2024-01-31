@@ -60,7 +60,7 @@
           [else
            (log-debug "File ~s does not exist... pulling and creating" filename)
            (call-with-output-file filename
-             (curry pull-update url))])))
+             (curry pull-update pg))])))
 
 (define (pull-update pg out)
   (match-define [page title url notify-path] pg)

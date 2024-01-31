@@ -64,7 +64,7 @@
              (curry pull-update pg))])))
 
 (define (pull-update pg out)
-  (match-define [page title url notify-path] pg)
+  (match-define [page _title url notify-path] pg)
   (log-debug "Retrieving page at url: ~s" url)
   (define res (get url))
   (cond [(= 200 (response-status-code res))

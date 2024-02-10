@@ -39,9 +39,11 @@
 
 (define (check-update pg)
   (match-define [page title url notify-path] pg)
-  (with-handlers ([exn?
-                   (lambda (e)
-                     (notify+log notify-path (exn-message e) #:level 'error))])
+  (define ((notify+log/exn #:level [level 'debug]) e)
+    (define message (format "raised by ~a:\n~a" title (exn-message e)))
+    (notify+log notify-path message #:level level))
+  (with-handlers ([exn:fail:resource? (notify+log/exn #:level 'warning)]
+                  [exn?               (notify+log/exn #:level 'error)])
     (define filename (format "~a.html" title))
     (cond [(file-exists? filename)
            (call-with-input-file filename
